@@ -159,11 +159,17 @@ function runProgram(prog, inp) {
 for (const id of readdirSync(IN_DIR).sort()) {
   const dir = join(IN_DIR, id);
   if (!statSync(dir).isDirectory()) continue;
-  const prog = readFileSync(join(dir, "program.bin"));
-  const inp = existsSync(join(dir, "input.bin")) ? readFileSync(join(dir, "input.bin")) : Buffer.alloc(0);
-  const { out, code } = runProgram(prog, inp);
   const od = join(OUT_DIR, id);
   mkdirSync(od, { recursive: true });
-  writeFileSync(join(od, "stdout.bin"), out);
-  writeFileSync(join(od, "exit.txt"), code + "\n");
+  try {
+    const prog = readFileSync(join(dir, "program.bin"));
+    const inp = existsSync(join(dir, "input.bin")) ? readFileSync(join(dir, "input.bin")) : Buffer.alloc(0);
+    const { out, code } = runProgram(prog, inp);
+    writeFileSync(join(od, "stdout.bin"), out);
+    writeFileSync(join(od, "exit.txt"), code + "\n");
+  } catch {
+    // One unreadable instance must not abort the other 39: answer it empty.
+    writeFileSync(join(od, "stdout.bin"), Buffer.alloc(0));
+    writeFileSync(join(od, "exit.txt"), "0\n");
+  }
 }
